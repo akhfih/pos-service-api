@@ -1,0 +1,69 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Branch {
+  id           Int           @id @default(autoincrement())
+  name         String        @db.VarChar(100)
+  location     String        @db.VarChar(255)
+  transactions Transaction[]
+
+  @@map("branches")
+}
+
+model User {
+  username     String        @id @db.VarChar(100)
+  password     String        @db.VarChar(100)
+  name         String        @db.VarChar(100)
+  token        String?       @db.VarChar(100)
+  transactions Transaction[]
+
+  @@map("users")
+}
+
+model Product {
+  id               Int               @id @default(autoincrement())
+  name             String            @db.VarChar(100)
+  price            Decimal           @db.Decimal(10, 2)
+  stock            Int
+  transactionItems TransactionItem[]
+
+  @@map("products")
+}
+
+model Transaction {
+  id         Int               @id @default(autoincrement())
+  user       User              @relation(fields: [userId], references: [username])
+  userId     String            @db.VarChar(100)
+  branch     Branch            @relation(fields: [branchId], references: [id])
+  branchId   Int
+  totalPrice Decimal           @db.Decimal(10, 2)
+  createdAt  DateTime          @default(now())
+  items      TransactionItem[]
+
+  @@map("transactions")
+}
+
+model TransactionItem {
+  id            Int         @id @default(autoincrement())
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  transactionId Int
+  product       Product     @relation(fields: [productId], references: [id])
+  productId     Int
+  quantity      Int
+  price         Decimal     @db.Decimal(10, 2)
+
+  @@map("transaction_items")
+}
